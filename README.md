@@ -2,9 +2,8 @@ Inspiracija/Nadogradnja - Inspiration/Upgrade
 https://github.com/themrandray/Lottelligence/tree/main
 
 
-
-cd /Users/4c/Desktop/GHQ/kurzor/Lottelligence-main
 python3 run.py
+
 
 Zatim u pregledaču otvori adresu koju Flask ispiše 
 (obično http://127.0.0.1:5000/).
