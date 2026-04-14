@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <title>Lottelligence — Loto 7/39</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.png') }}">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+{% macro model_label(m) -%}
+{%- if m == 'logreg_sgd' -%}Logistička regresija (SGD)
+{%- elif m == 'random_forest' -%}Slučajna šuma
+{%- elif m == 'xgboost' -%}XGBoost / gradijent boosting
+{%- else -%}{{ m }}
+{%- endif -%}
+{% endmacro %}
+
+<div class="page-container">
+
+    <header>
+        <h1 class="logo">
+            <a href="/">Lottelligence</a>
+        </h1>
+    </header>
+
+    {% if error %}
+    <div class="error-panel">
+        <strong>Greška:</strong> {{ error }}
+    </div>
+    {% endif %}
+
+    <main class="grid-container">
+            <section class="card compact">
+                <form id="main-run-form" action="{{ url_for('main.run') }}" method="post" enctype="multipart/form-data">
+                    <h2>Učitavanje podataka i podešavanja eksperimenta</h2>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dataset-input">Datoteka (CSV / XLSX)</label>
+                                <label class="file-upload">
+                                    <span id="file-label">Izaberite fajl</span>
+                                    <input type="file" name="dataset" id="dataset-input">
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="lottery">Lutrija</label>
+                                <select id="lottery" name="lottery">
+                                    <option value="loto739" {% if form_state.lottery == 'loto739' %}selected{% endif %}>Loto 7/39</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="file_format">Format fajla</label>
+                                <select id="file_format" name="file_format">
+                                    <option value="loto739_num" {% if form_state.file_format == 'loto739_num' %}selected{% endif %}>CSV sa zaglavljem (Num1–Num7)</option>
+                                    <option value="loto739_samo" {% if form_state.file_format == 'loto739_samo' %}selected{% endif %}>CSV bez zaglavlja (7 kolona brojeva)</option>
+                                    <option value="loto739_prepared" {% if form_state.file_format == 'loto739_prepared' %}selected{% endif %}>Pripremljeno (date, n1–n7, draw_no)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="split_ratio">Podela train / test</label>
+                                <select id="split_ratio" name="split_ratio">
+                                    <option value="50_50" {% if form_state.split_ratio == '50_50' %}selected{% endif %}>50/50</option>
+                                    <option value="55_45" {% if form_state.split_ratio == '55_45' %}selected{% endif %}>55/45</option>
+                                    <option value="60_40" {% if form_state.split_ratio == '60_40' %}selected{% endif %}>60/40</option>
+                                    <option value="65_35" {% if form_state.split_ratio == '65_35' %}selected{% endif %}>65/35</option>
+                                    <option value="70_30" {% if form_state.split_ratio == '70_30' %}selected{% endif %}>70/30</option>
+                                    <option value="75_25" {% if form_state.split_ratio == '75_25' %}selected{% endif %}>75/25</option>
+                                    <option value="80_20" {% if form_state.split_ratio == '80_20' %}selected{% endif %}>80/20</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <p class="last-file-info">
+                            {% if last_uploaded_file %}
+                                Poslednji korišćeni fajl: {{ last_uploaded_file }}
+                            {% else %}
+                                Bez otpremanja: <code>GHQ/data/loto7hh_4596_k29.csv</code> (Num1–Num7).
+                            {% endif %}
+                        </p>
+
+                        <div class="form-actions">
+                            <button type="submit" name="action" value="run">Pokreni eksperiment</button>
+                        </div>
+                </form>
+            </section>
+
+            <section class="card compact">
+                <div class="top-right-split">
+
+                    <div class="panel-half">
+                        <div class="panel-half-header">
+                            <h2>Modeli i status</h2>
+
+                            <div class="status-bar">
+                                <span class="status-label">Status:</span>
+
+                                {% if status == 'done' %}
+                                    <span class="status-dot status-done"></span>
+                                    <span class="status-text">Gotovo</span>
+                                {% else %}
+                                    <span class="status-dot status-idle"></span>
+                                    <span class="status-text">Čekanje</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <p>Eksperiment koristi tri modela:</p>
+                        <ul>
+                            <li>Logistička regresija (SGDClassifier)</li>
+                            <li>Slučajna šuma (RandomForestClassifier)</li>
+                            <li>XGBoost ili GradientBoosting (fallback)</li>
+                        </ul>
+                    </div>
+
+                    <div class="panel-half">
+                        <div class="panel-half-header">
+                            <h2>Dodatna analiza</h2>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="top-k-select">Koliko brojeva prikazati</label>
+                            <select id="top-k-select">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5" selected>5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                            </select>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="comb-size-select">Veličina kombinacije (par, trojka…)</label>
+                            <select id="comb-size-select">
+                                <option value="2" selected>2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                            </select>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="comb-top-k-select">Koliko kombinacija prikazati</label>
+                            <select id="comb-top-k-select">
+                                <option value="5" selected>5</option>
+                                <option value="10">10</option>
+                            </select>
+                        </div>
+
+                        <div class="extra-analysis-actions">
+                            <button type="button" id="top-numbers-btn">Najčešći brojevi</button>
+                            <button type="button" id="top-combinations-btn">Najčešće kombinacije</button>
+                        </div>
+
+                    <div class="analysis-result" id="analysis-result-box"></div>
+
+                    </div>
+
+                </div>
+            </section>
+
+        <section class="card">
+            <h2>Rezultati</h2>
+
+            {% if next_combo %}
+            <div class="next-prediction-box">
+                <h3>Predlog za sledeće izvlačenje (7 brojeva)</h3>
+                <p class="next-combo-line">{{ next_combo | join(' — ') }}</p>
+                <p class="next-prediction-note">Pet uzastopnih žreba u obeležjima, frekvencija i razmaci računati od cele istorije u CSV-u; predlog = prosek tri modela (SGD, šuma, XGB/GB). Informativno — nije obećanje ishoda.</p>
+            </div>
+            {% endif %}
+
+            {% if results %}
+
+            <div class="double-table">
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>LogLoss</th>
+                            <th>Brier</th>
+                            <th>hit@K_glavni</th>
+                            <th>hit@10</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in results %}
+                        <tr>
+                            <td>{{ model_label(row.model) }}</td>
+                            <td>{{ "%.4f"|format(row.logloss) }}</td>
+                            <td>{{ "%.4f"|format(row.brier) }}</td>
+                            <td>{{ "%.4f"|format(row.hit_k_main) }}</td>
+                            <td>{{ "%.4f"|format(row.hit_10) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>K_glavni</th>
+                            <th>Split</th>
+                            <th>Train redova</th>
+                            <th>Test redova</th>
+                            <th>Train od</th>
+                            <th>Train do</th>
+                            <th>Test od</th>
+                            <th>Test do</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in results %}
+                        <tr>
+                            <td>{{ model_label(row.model) }}</td>
+                            <td>{{ row.k_main }}</td>
+                            <td>{{ row.split_ratio }}</td>
+                            <td>{{ row.train_rows }}</td>
+                            <td>{{ row.test_rows }}</td>
+
+                            <td>{{ row.train_date_from | ddmmyyyy }}</td>
+                            <td>{{ row.train_date_to   | ddmmyyyy }}</td>
+                            <td>{{ row.test_date_from  | ddmmyyyy }}</td>
+                            <td>{{ row.test_date_to    | ddmmyyyy }}</td>
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+            </div>
+
+            <div class="results-note-box">
+                <p>* LogLoss i Brier su mere greške — manja vrednost je bolja.</p>
+                <p>** hit@K_glavni i hit@10 mere pogodaka — veća vrednost je bolja.</p>
+            </div>
+
+                        {% if best_summary %}
+             <div class="best-summary-box">
+                <h3 class="best-summary-title">Najbolji ishod eksperimenta</h3>
+
+                <p><strong>Najbolji model (zbir rangova):</strong> <span class="best-summary-winner">{{ model_label(best_summary.best_overall.model) }}</span></p>
+                <p><strong>Korišćeni split:</strong> {{ best_summary.best_overall.split_ratio }}</p>
+
+                <p><strong>Najbolji po LogLoss:</strong>
+                    {{ model_label(best_summary.best_by_metric.logloss.model) }}
+                    ({{ "%.4f"|format(best_summary.best_by_metric.logloss.value) }})
+                </p>
+
+                <p><strong>Najbolji po Brier:</strong>
+                    {{ model_label(best_summary.best_by_metric.brier.model) }}
+                    ({{ "%.4f"|format(best_summary.best_by_metric.brier.value) }})
+                </p>
+
+                <p><strong>Najbolji po hit@K_glavni:</strong>
+                    {{ model_label(best_summary.best_by_metric.hit_k_main.model) }}
+                    ({{ "%.4f"|format(best_summary.best_by_metric.hit_k_main.value) }})
+                </p>
+
+                <p><strong>Najbolji po hit@10:</strong>
+                    {{ model_label(best_summary.best_by_metric.hit_10.model) }}
+                    ({{ "%.4f"|format(best_summary.best_by_metric.hit_10.value) }})
+                </p>
+
+                <p>
+                    <strong>Rangovi:</strong>
+                    LogLoss: {{ best_summary.best_overall.metric_ranks.logloss }},
+                    Brier: {{ best_summary.best_overall.metric_ranks.brier }},
+                    hit@K_glavni: {{ best_summary.best_overall.metric_ranks.hit_k_main }},
+                    hit@10: {{ best_summary.best_overall.metric_ranks.hit_10 }}
+                </p>
+
+            </div>
+            {% endif %}
+
+            {% else %}
+            <p>Još nema rezultata. Pokrenite eksperiment.</p>
+            {% endif %}
+        </section>
+
+        <section class="card">
+            <h2>Grafikon i poređenje</h2>
+
+            <div id="metric-toggles">
+                <label><input type="checkbox" checked onclick="toggleMetric(0)"> LogLoss</label>
+                <label><input type="checkbox" checked onclick="toggleMetric(1)"> Brier</label>
+                <label><input type="checkbox" checked onclick="toggleMetric(2)"> hit@K_glavni</label>
+                <label><input type="checkbox" checked onclick="toggleMetric(3)"> hit@10</label>
+            </div>
+
+            <canvas id="barChart" width="600" height="350"></canvas>
+        </section>
+
+    </main>
+</div>
+
+<script id="results-json" type="application/json">
+    {{ results | tojson }}
+</script>
+
+<script id="best-summary-json" type="application/json">
+    {{ best_summary | tojson }}
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const el = document.getElementById("results-json");
+    if (!el) return;
+
+    let results = [];
+    try {
+        results = JSON.parse(el.textContent || "[]");
+    } catch (e) {
+        console.error("JSON greška:", e);
+        return;
+    }
+
+    const bestSummaryEl = document.getElementById("best-summary-json");
+    let bestSummary = null;
+
+    try {
+        bestSummary = bestSummaryEl
+            ? JSON.parse(bestSummaryEl.textContent || "null")
+            : null;
+    } catch (e) {
+        console.error("Best summary JSON greška:", e);
+        bestSummary = null;
+    }
+
+    if (!results.length) return;
+
+    const bestModelName = bestSummary?.best_overall?.model || null;
+
+    const labels = results.map(r => {
+        if (r.model === "logreg_sgd") return "Log. regresija (SGD)";
+        if (r.model === "random_forest") return "Slučajna šuma";
+        if (r.model === "xgboost") return "XGBoost / G. boost.";
+        return r.model;
+    });
+
+       function colorFor(model, baseColor) {
+        return model === bestModelName
+            ? baseColor.replace("0.5", "0.9")
+            : baseColor;
+    }
+
+    function borderFor(model) {
+        return model === bestModelName ? "#ffffff" : "rgba(0,0,0,0)";
+    }
+
+    function borderWidthFor(model) {
+        return model === bestModelName ? 3 : 1;
+    }
+
+    const datasets = [
+        {
+            label: "LogLoss",
+            data: results.map(r => r.logloss),
+            backgroundColor: results.map(r =>
+                colorFor(r.model, "rgba(255, 99, 132, 0.5)")
+            ),
+            borderColor: results.map(r => borderFor(r.model)),
+            borderWidth: results.map(r => borderWidthFor(r.model))
+        },
+        {
+            label: "Brier",
+            data: results.map(r => r.brier),
+            backgroundColor: results.map(r =>
+                colorFor(r.model, "rgba(54, 162, 235, 0.5)")
+            ),
+            borderColor: results.map(r => borderFor(r.model)),
+            borderWidth: results.map(r => borderWidthFor(r.model))
+        },
+        {
+            label: "hit@K_glavni",
+            data: results.map(r => r.hit_k_main),
+            backgroundColor: results.map(r =>
+                colorFor(r.model, "rgba(255, 206, 86, 0.5)")
+            ),
+            borderColor: results.map(r => borderFor(r.model)),
+            borderWidth: results.map(r => borderWidthFor(r.model))
+        },
+        {
+            label: "hit@10",
+            data: results.map(r => r.hit_10),
+            backgroundColor: results.map(r =>
+                colorFor(r.model, "rgba(75, 192, 192, 0.5)")
+            ),
+            borderColor: results.map(r => borderFor(r.model)),
+            borderWidth: results.map(r => borderWidthFor(r.model))
+        }
+    ];
+
+    const canvas = document.getElementById("barChart");
+    if (!canvas) return;
+
+    const chart = new Chart(canvas, {
+        type: "bar",
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+                        scales: {
+                x: {
+                    ticks: {
+                        color: function(context) {
+                            const label = context.tick.label;
+                            const i = context.index;
+                            const orig = results[i]?.model;
+                            return orig === bestModelName ? "#fff3b0" : "#c6c494";
+                        }
+                    }
+                },
+                y: { ticks: { color: "#c6c494" } }
+            },
+            plugins: {
+                legend: { labels: { color: "#c6c494" } }
+            }
+        }
+    });
+
+    window.toggleMetric = function(index) {
+        chart.data.datasets[index].hidden =
+            !chart.data.datasets[index].hidden;
+        chart.update();
+    };
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const input = document.getElementById("dataset-input");
+    const label = document.getElementById("file-label");
+
+    if (input) {
+        input.addEventListener("change", function () {
+            label.textContent = this.files.length > 0
+                ? this.files[0].name
+                : "Izaberite fajl";
+        });
+    }
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const btn = document.getElementById("top-numbers-btn");
+    const topKSelect = document.getElementById("top-k-select");
+    const combBtn = document.getElementById("top-combinations-btn");
+    const combSizeSelect = document.getElementById("comb-size-select");
+    const combTopKSelect = document.getElementById("comb-top-k-select");
+    const resultBox = document.getElementById("analysis-result-box");
+
+    if (!btn || !resultBox || !topKSelect || !combBtn || !combSizeSelect || !combTopKSelect) return;
+    btn.addEventListener("click", async function () {
+        resultBox.innerHTML = "<p>Analiza u toku…</p>";
+
+        try {
+            const formData = new FormData();
+            formData.append("top_k", topKSelect.value);
+
+            const response = await fetch("/top-numbers-api", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!data.ok) {
+                resultBox.innerHTML = `<p>${data.error}</p>`;
+                return;
+            }
+
+            let html = `<h3>Brojevi</h3>`;
+            html += `<p class="analysis-source">Izvor: ${data.analysis_label}</p>`;
+            html += `<ul>`;
+
+            for (const item of data.top_numbers) {
+                html += `<li>${item.number} — ${item.freq} puta</li>`;
+            }
+
+            html += `</ul>`;
+            resultBox.innerHTML = html;
+
+        } catch (error) {
+            resultBox.innerHTML = "<p>Neuspešno učitavanje analize.</p>";
+        }
+    });
+
+    combBtn.addEventListener("click", async function () {
+        resultBox.innerHTML = "<p>Analiza u toku…</p>";
+
+        try {
+            const formData = new FormData();
+            formData.append("comb_size", combSizeSelect.value);
+            formData.append("top_k", combTopKSelect.value);
+
+            const response = await fetch("/top-combinations-api", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!data.ok) {
+                resultBox.innerHTML = `<p>${data.error}</p>`;
+                return;
+            }
+
+            let html = `<h3>Kombinacije</h3>`;
+            html += `<p class="analysis-source">Izvor: ${data.analysis_label}</p>`;
+            html += `<ul>`;
+
+            for (const item of data.top_combinations) {
+                html += `<li>${item.combo.join(", ")} — ${item.freq} puta</li>`;
+            }
+
+            html += `</ul>`;
+            resultBox.innerHTML = html;
+
+        } catch (error) {
+            resultBox.innerHTML = "<p>Neuspešno učitavanje kombinacija.</p>";
+        }
+    });
+});
+</script>
+
+</body>
+</html>

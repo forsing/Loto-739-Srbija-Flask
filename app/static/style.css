@@ -1,0 +1,461 @@
+/* Pamatstils tēmai */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #062041; /* tumši zils fons */
+    color: #c6c494;           /* zeltains teksts */
+}
+
+.page-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    color: #c6c494;
+}
+
+/* 2x2 kvadrantu režģis */
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 1px;
+    height: calc(100vh - 80px);
+}
+
+/* Kartītes */
+.card {
+    background-color: #0b2b5a;
+    border-radius: 8px;
+    padding: 16px 18px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    overflow-y: auto;
+    position: relative; /* ļauj absolūtam elementam atrasties iekšā */
+}
+
+.card h2 {
+    margin-top: 0;
+    color: #f0e6c0;
+    text-align: center;
+}
+
+/* Kompaktās kartītes 1. un 2. kvadrantam */
+.card.compact {
+    padding: 10px 16px !important;
+    margin-bottom: 0px !important;
+    min-height: 150px !important; 
+    max-height: 200px !important;
+}
+
+.card.compact h2 {
+    margin: 0 0 8px 0 !important;
+    font-size: 18px !important;
+}
+
+.card.compact .form-group {
+    margin-bottom: 8px !important;
+}
+
+.card.compact label,
+.card.compact select,
+.card.compact input,
+.card.compact button,
+.card.compact p,
+.card.compact ul,
+.card.compact li {
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+}
+
+.card.compact ul {
+    margin: 4px 0 !important;
+    padding-left: 18px !important;
+}
+
+.card.compact .status-bar {
+    margin-top: 4px !important;
+    margin-bottom: 4px !important;
+}
+
+/* Formas elementi */
+.form-group {
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+}
+
+/* Paslēpts īstais faila lauks */
+#dataset-input {
+    display: none;
+}
+
+/* Kompakta tumša poga (Choose File) */
+.file-upload {
+    background-color: #04152b;
+    color: #c6c494;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid #c6c494;
+    cursor: pointer;
+    width: fit-content;
+    display: inline-block;
+}
+
+.file-upload span {
+    pointer-events: none;
+}
+
+/* Select lauki */
+select {
+    background-color: #04152b;
+    color: #c6c494;
+    border: 1px solid #c6c494;
+    padding: 6px 8px;
+    border-radius: 4px;
+
+    width: fit-content;
+    max-width: fit-content;
+    display: inline-block;
+    cursor: pointer;
+
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* Number lauks */
+input[type="number"] {
+    background-color: #04152b;
+    color: #c6c494;
+    border: 1px solid #c6c494;
+    padding: 6px 8px;
+    border-radius: 4px;
+    width: 80px;
+}
+
+/* Pogas */
+button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    background-color: #c6c494;
+    color: #062041;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #e0ddb0;
+}
+
+/* Kļūdu panelis */
+.error-panel {
+    background-color: #5a0b0b;
+    color: #f8d7da;
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+}
+
+/* Statusa indikators */
+.status-bar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.status-label {
+    margin-right: 8px;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+}
+
+.status-idle {
+    background-color: #777777;
+}
+
+.status-done {
+    background-color: #4caf50;
+}
+
+.status-text {
+    font-size: 0.9rem;
+}
+
+/* Tabulas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    border-bottom: 2px solid #c6c494;
+}
+
+th, td {
+    border: 1px solid #c6c494;
+    padding: 4px 6px;
+    text-align: center;
+}
+
+th {
+    background-color: #04152b;
+}
+
+/* Status augšējā labajā stūrī */
+.status-top-right {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+}
+
+/* Trīs ievades lauki vienā rindā */
+.form-row {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start; /* izlīdzina elementu apakšas vienā līmenī */
+}
+
+/* Poga zem otrā lauka (Loterijas tips) */
+.form-actions {
+    display: flex;
+    justify-content: flex-start; /* poga pa kreisi */
+    margin-left: calc(100% / 3); /* nobīde tieši zem otrā bloka */
+    margin-top: 20px;
+}
+
+.form-row .form-group {
+    flex: 1; /* visi trīs vienāda platuma */
+}
+
+/* Klikojams zelta logotips */
+.logo a {
+    color: #c6c494;                 /* zeltains teksts */
+    text-decoration: none;
+    font-weight: 700;
+    padding: 4px 8px;               /* neliels iekšējais atstatums */
+    border-radius: 6px;
+    transition: color 0.25s ease, text-shadow 0.25s ease;
+}
+
+/* Zeltaina kontūra mirdzums pie hover */
+.logo a:hover {
+    color: #d4ba71;                 /* nedaudz spilgtāks zelts */
+    text-shadow: 0 0 6px #ffd86b;   /* zeltains mirdzums ap burtiem */
+    cursor: pointer;
+}
+
+/* ===== Panelis 2: iekšējais sadalījums kreisā / labā daļa ===== */
+.top-right-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.panel-half {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.panel-half-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.panel-half-header h2 {
+    margin: 0 !important;
+    text-align: left !important;
+}
+
+.extra-analysis-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.extra-analysis-actions button {
+    width: fit-content;
+    min-width: 200px;
+    text-align: center;
+    align-self: flex-start;
+}
+
+/* Ja logs šaurāks, tad abi bloki atkal viens zem otra */
+@media (max-width: 1100px) {
+    .top-right-split {
+        grid-template-columns: 1fr;
+    }
+}
+
+.analysis-result {
+    min-height: 180px;
+}
+
+
+/* Papildu stils diagrammai un leģendai */
+
+/* Konteiners grafikam un leģendai */
+.chart-flex {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    height: 350px;
+}
+
+/* Leģenda labajā pusē */
+.legend-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-left: 20px;
+    margin-top: 10px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 15px;
+    color: #c6c494;
+    cursor: pointer;
+}
+
+.legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    margin-right: 8px;
+}
+
+/* Labākā modeļa apgaismojums */
+.legend-best {
+    font-weight: 700;
+    font-size: 17px;
+    color: #ffffff;
+}
+
+/* Dubultā tabula */
+.double-table {
+    margin-bottom: 25px;
+}
+
+.double-table table {
+    width: 102%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+}
+
+.double-table th, .double-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #444;
+    color: #c6c494;
+    text-align: center;
+}
+
+.double-table th:first-child,
+.double-table td:first-child {
+    text-align: left;
+}
+
+.double-table th {
+    font-weight: 700;
+    color: #e0dfc7;
+}
+
+#metric-toggles {
+    text-align:center;
+    margin-bottom: 10px;
+}
+
+.last-file-info {
+    margin: 6px 0 0 0;
+    font-size: 14px;
+    line-height: 1.2;
+}
+
+.top-right-split .panel-half:last-child {
+    padding-left: 74px;
+}
+
+.panel-half-header .status-bar {
+    position: relative;
+    left: 56px;
+}
+
+.best-summary-box {
+    margin-top: 18px;
+    padding: 14px;
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    color: #c6c494;
+}
+
+.best-summary-title {
+    margin-top: 0;
+    text-align: center;
+    color: #e0dfc7;
+}
+
+.best-summary-winner {
+    color: #ffe082;
+    font-weight: 700;
+}
+
+.results-note-box {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #c6c494;
+}
+
+.next-prediction-box {
+    margin-bottom: 20px;
+    padding: 16px 18px;
+    border: 1px solid #4a7ab5;
+    border-radius: 10px;
+    background: rgba(255, 243, 176, 0.08);
+}
+
+.next-prediction-box h3 {
+    margin-top: 0;
+    color: #fff3b0;
+    font-size: 1.1rem;
+}
+
+.next-combo-line {
+    font-size: 1.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #fff8dc;
+    margin: 10px 0;
+}
+
+.next-prediction-note {
+    font-size: 13px;
+    color: #a8b8c8;
+    margin-bottom: 0;
+}
