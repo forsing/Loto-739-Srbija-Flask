@@ -9,13 +9,14 @@ if __name__ == "__main__":
 
 
 
+
 """
 Inspiracija/Nadogradnja - Inspiration/Upgrade
 https://github.com/themrandray/Lottelligence/tree/main
 
 
 
-cd /Users/4c/Desktop/GHQ/kurzor/Lottelligence-main
+cd /Loto-739-Srbija-Flask-main
 python3 run.py
 
 Zatim u pregledaču otvori adresu koju Flask ispiše 
@@ -31,6 +32,18 @@ Zatim u pregledaču otvori adresu koju Flask ispiše
 127.0.0.1 - - [14/Apr/2026 00:38:34] "POST /run HTTP/1.1" 200 -
 127.0.0.1 - - [14/Apr/2026 00:38:34] "GET /static/style.css HTTP/1.1" 304 -
 127.0.0.1 - - [14/Apr/2026 00:38:57] "POST /top-combinations-api HTTP/1.1" 200 -
+
+
+
+
+
+Rezultati
+Predlog za sledeće izvlačenje (7 brojeva)
+2 - x - 10 - y - 33 — z — 39
+Pet uzastopnih izvlacenj u obelezjima, frekvencija i razmaci racunati od cele istorije u CSV; 
+predlog = prosek tri modela (SGD, RF, XGB/GB). 
+Informativno — nije obecanje ishoda.
+
 
 
 
